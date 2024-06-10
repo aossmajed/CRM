@@ -5,15 +5,24 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
+
 {
+    /**
+     * The name of the database connection to use.
+     *
+     * @var string
+     */
+    protected $connection = 'oracle';
+
     /**
      * Run the migrations.
      *
      * @return void
      */
+
     public function up()
     {
-        Schema::create('jobs', function (Blueprint $table) {
+        Schema::connection($this->connection)->create('jobs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('queue')->index();
             $table->longText('payload');
@@ -31,6 +40,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('jobs');
+        Schema::connection($this->connection)->dropIfExists('jobs');
     }
 };

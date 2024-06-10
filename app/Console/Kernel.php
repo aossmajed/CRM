@@ -19,6 +19,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('TransferDataFromMySqlToOracel:TransferDataFromMySqlToOracel')
         ->everyFiveMinutes()
         ->timezone('Asia/Riyadh')->withoutOverlapping();
+        $schedule->command('yakeen:TransferYakeenDataFromMySqlToOracelCommand')
+        ->everyFiveMinutes()
+        ->timezone('Asia/Riyadh')->withoutOverlapping();
     }
 
     /**
@@ -28,6 +31,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\TransferDataFromMySqlToOracelCommand::class,
+        Commands\TransferYakeenDataFromMySqlToOracelCommand::class,
     ];
     protected function commands()
     {

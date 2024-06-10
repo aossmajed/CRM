@@ -1,26 +1,26 @@
 <?php
 namespace App\Services;
-use App\Jobs\TransferDataFromMYSQLtoORACEL;
+use App\Jobs\TransferYakeenDataFromMYSQLtoORACEL;
 use DateTime;
 use Carbon\Carbon;
 use App\Models\{leads_vu_kastle,leads_vu_kastle_oracel};
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Throwable;
-class TransferDataServices{
+class TransferYakeenDataServices{
 
-    public static function TransferDataFromMySqlToOracel (){
+    public static function TransferYakeenDataFromMySqlToOracel (){
 
 
-        printf("aoss\n");
-        TransferDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database');
+        printf("444\n");
+        TransferYakeenDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database');
     }
 
-    public static function TransferDataFromMySqlToOracel2 (){
+    public static function TransferYakeenDataFromMySqlToOracel2 (){
 
 
-        printf("zada\n");
-        TransferDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database');
+        printf("5555\n");
+        TransferYakeenDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database2');
     }
     public static function handle_data_and_insert_to_oracle(){
         $i =1 ;

@@ -42,6 +42,14 @@ return [
             'after_commit' => false,
             'connection' => 'mysql2',
         ],
+        'database2' => [
+            'driver' => 'database',
+            'table' => 'jobs_yakeen',
+            'queue' => 'default',
+            'retry_after' => 90,
+            'after_commit' => false,
+            'connection' => 'mysql2',
+        ],
 
         'beanstalkd' => [
             'driver' => 'beanstalkd',
@@ -87,8 +95,9 @@ return [
 
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
-        'database' => env('DB_CONNECTION', 'mysql'),
+        'database' => env('DB_CONNECTION2', 'mysql'),
         'table' => 'failed_jobs',
     ],
+    
 
 ];

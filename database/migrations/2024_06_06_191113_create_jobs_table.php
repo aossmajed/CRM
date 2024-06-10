@@ -12,7 +12,7 @@ return new class extends Migration
      *
      * @var string
      */
-    protected $connection = 'oracle';
+    protected $connection = 'mysql2';
 
     /**
      * Run the migrations.

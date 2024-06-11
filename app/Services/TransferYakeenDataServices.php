@@ -115,6 +115,7 @@ class TransferYakeenDataServices{
                 'SERVICE_DATA'=> $data->service_data,
                 'CREATED_BY'=> $data->created_by,
                 'CREATION_DATE'=> $creation_date,
+                'CRE_DATE'=>now()
             ];
         return $input;
     }catch (Throwable $e) {

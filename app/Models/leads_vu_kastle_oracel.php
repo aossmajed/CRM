@@ -111,8 +111,8 @@ class leads_vu_kastle_oracel extends Model
         'SOCIAL_STATUS',
         'SOCIAL_STATUS_V',
         'SOCIAL_STATUS_KASTLE',
-        'DATE',
-        'MONTH',
+        'DATE1',
+        'MONTH1',
         'DOB',
         'RDOB',
         'EMPLOYER_NAME',
@@ -192,6 +192,7 @@ class leads_vu_kastle_oracel extends Model
         'EDUCATION_LEVEL_V',
         'EDUCATION_LEVEL_KASTLE',
         'UTM_SOURCE',
-        'UTM_CAMPAIGN'
+        'UTM_CAMPAIGN',
+        'KASTLE_USERID'
     ];
 }

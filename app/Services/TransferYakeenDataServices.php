@@ -9,30 +9,27 @@ use Exception;
 use Throwable;
 class TransferYakeenDataServices{
 
-    public static function TransferYakeenDataFromMySqlToOracel (){
-
-
-        printf("444\n");
+    public static function TransferYakeenDataFromMySqlToOracel_ (){
         TransferYakeenDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database2');
     }
-
     public static function TransferYakeenDataFromMySqlToOracel2 (){
-
-
-        printf("5555\n");
         TransferYakeenDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database2');
         self::handle_data_and_insert_to_oracle_yakeen();
     }
     public static function handle_data_and_insert_to_oracle_yakeen(){
         $i =1 ;
-        $max=xx_nfh_yakeen_data_oracel::max('REC_ID');
+        $count=xx_nfh_yakeen_data_oracel::count();
+        if ($count ==0){
+            $max=0;
+        }else{
+            $max=xx_nfh_yakeen_data_oracel::max('REC_ID');
+        }
         xx_nfh_yakeen_data::whereNotNull('rec_id')
-            ->whereNotNull('acc_id')
             ->where('rec_id', '>',$max)
             ->orderBy('rec_id','asc')
             ->chunk(100, function ($leads_vu_kastle_data)  use (&$i){
                 foreach($leads_vu_kastle_data as $data){
-                    $second=xx_nfh_yakeen_data_oracel::whereIn('REC_ID',$data->lead_id)->first();
+                    $second=xx_nfh_yakeen_data_oracel::where('REC_ID',$data->lead_id)->first();
                     if($second==null){
                         $input=self::handle_input_before_insert_to_oracle($data);
                         self::insert_to_oracle($input);
@@ -41,7 +38,7 @@ class TransferYakeenDataServices{
                         printf("DATA IS FOUND ,WHERE lead_id = ".$data->rec_id. ' index : '. $i."\n");
                     }
                 }
-            });
+        });
     }
     public static function insert_to_oracle($input){
         try{

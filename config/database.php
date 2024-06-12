@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION3', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -81,6 +81,25 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
+        'mysql3' => [
+            'driver' => 'mysql',
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_HOST3', '127.0.0.1'),
+            'port' => env('DB_PORT3', '3306'),
+            'database' => env('DB_DATABASE3', 'forge'),
+            'username' => env('DB_USERNAME3', 'forge'),
+            'password' => env('DB_PASSWORD3', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
 
         'pgsql' => [
             'driver' => 'pgsql',
@@ -111,7 +130,7 @@ return [
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
-        'oracle1' => [
+        'oracle' => [
             'driver' => 'oracle',
             'tns' => env('DB_TNS', ''),
             'host' => env('DB_HOST_3', ''),
@@ -136,33 +155,6 @@ return [
                 'NLS_NUMERIC_CHARACTERS' => '.,',
             ],
         ],
-        'oracle1' => [
-            'driver' => 'oracle',
-            'tns' => env('DB_TNS', ''),
-            'host' => env('DB_HOST_3', ''),
-            'port' => env('DB_PORT_3', '1521'),
-            'database' => env('DB_DATABASE_3', ''),
-            'service_name' => env('DB_SERVICE_NAME_3', ''),
-            'username' => env('DB_USERNAME_3', ''),
-            'password' => env('DB_PASSWORD_3', ''),
-            'charset' => env('DB_CHARSET_3', 'AL32UTF8'),
-            'prefix' => env('DB_PREFIX', ''),
-            'prefix_schema' => env('DB_SCHEMA_PREFIX', ''),
-            'edition' => env('DB_EDITION', 'ora$base'),
-            'server_version' => env('DB_SERVER_VERSION', '11g'),
-            'load_balance' => env('DB_LOAD_BALANCE', 'yes'),
-            'max_name_len' => env('ORA_MAX_NAME_LEN', 30),
-            'dynamic' => [],
-            'privilege'      => env('DB_PRIVILEGE_3', 'SYSDBA'),
-            'sessionVars' => [
-                'NLS_TIME_FORMAT' => 'HH24:MI:SS',
-                'NLS_DATE_FORMAT' => 'YYYY-MM-DD HH24:MI:SS',
-                'NLS_TIMESTAMP_FORMAT' => 'YYYY-MM-DD HH24:MI:SS',
-                'NLS_TIMESTAMP_TZ_FORMAT' => 'YYYY-MM-DD HH24:MI:SS TZH:TZM',
-                'NLS_NUMERIC_CHARACTERS' => '.,',
-            ],
-        ],
-
     ],
 
     /*

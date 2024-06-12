@@ -27,7 +27,7 @@ class TransferYakeenDataFromMySqlToOracelCommand extends Command
      */
     public function handle()
     {
-        TransferYakeenDataServices::TransferYakeenDataFromMySqlToOracel();
+        TransferYakeenDataServices::TransferYakeenDataFromMySqlToOracel_();
         return Command::SUCCESS;
     }
 }

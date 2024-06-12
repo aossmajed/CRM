@@ -95,7 +95,7 @@ return [
 
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
-        'database' => env('DB_CONNECTION_3', 'mysql'),
+        'database' => env('DB_CONNECTION3', 'mysql'),
         'table' => 'failed_jobs',
     ],
     

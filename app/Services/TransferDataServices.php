@@ -27,7 +27,6 @@ class TransferDataServices{
         leads_vu_kastle::whereNotNull('lead_id')
             ->whereNotNull('acc_id')
             ->where('lead_id', '>',$max)
-            // ->whereBetween('creation_date', [now()->subWeek(), now()])
             ->orderBy('lead_id','asc')
             ->chunk(100, function ($leads_vu_kastle_data)  use (&$i){
                 foreach($leads_vu_kastle_data as $data){
@@ -39,6 +38,28 @@ class TransferDataServices{
                     }else{
                         printf("DATA IS FOUND ,WHERE lead_id = ".$data->lead_id."\n");
                     }
+                }
+            });
+        leads_vu_kastle::whereNotNull('lead_id')
+            ->whereNotNull('acc_id')
+            ->whereDate('assignment_status_date', date("Y-m-d"))
+            ->orderBy('modified_date','desc')
+            ->chunk(100, function ($leads_vu_kastle_data)  use (&$i){
+                $ids = $leads_vu_kastle_data->pluck('lead_id')->toArray();
+                $second2=leads_vu_kastle_oracel::wherein('lead_id',$ids)->count();
+                if(count($ids)!=$second2){
+                    foreach($leads_vu_kastle_data as $data){
+                        $second=leads_vu_kastle_oracel::where('lead_id',$data->lead_id)->where('acc_id',$data->acc_id)->first();
+                        if($second==null){
+                            $input=self::handle_input_before_insert_to_oracle($data);
+                            self::insert_to_oracle_and_run_proceduer($input);
+                            printf("DATA INSERTED 2 ,WHERE lead_id = ".$data->lead_id."\n");
+                        }else{
+                            printf("DATA IS FOUND 2 ,WHERE lead_id = ".$data->lead_id."\n");
+                        }
+                    }
+                }else{
+                    printf("DATA IS FOUND 3\n");
                 }
             });
     }

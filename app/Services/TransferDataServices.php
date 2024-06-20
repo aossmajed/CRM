@@ -3,9 +3,10 @@ namespace App\Services;
 use App\Jobs\TransferDataFromMYSQLtoORACEL;
 use DateTime;
 use Carbon\Carbon;
-use App\Models\{leads_vu_kastle,leads_vu_kastle_oracel};
+use App\Models\{leads_vu_kastle,leads_vu_kastle_oracel,SIR_LEADS2_VU_KASTLE};
 use Illuminate\Support\Facades\DB;
 use Exception;
+use NunoMaduro\Collision\Adapters\Phpunit\State;
 use Throwable;
 class TransferDataServices{
 
@@ -14,7 +15,57 @@ class TransferDataServices{
     }
     public static function TransferDataFromMySqlToOracel2 (){
         TransferDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database');
+        self:: handle_data_and_insert_to_oracle_2();
         self:: handle_data_and_insert_to_oracle();
+    }
+
+    public static function handle_data_and_insert_to_oracle_2(){
+        $i =1 ;
+        $count=SIR_LEADS2_VU_KASTLE::count();
+        if ($count ==0){
+            $max=0;
+        }else{
+            $max=SIR_LEADS2_VU_KASTLE::max('LEAD_ID');
+        }
+        leads_vu_kastle::whereNotNull('lead_id')
+            ->whereNotNull('acc_id')
+            ->where('lead_id', '>',$max)
+            ->orderBy('lead_id','asc')
+            ->chunk(100, function ($leads_vu_kastle_data)  use (&$i){
+                foreach($leads_vu_kastle_data as $data){
+                    $second=SIR_LEADS2_VU_KASTLE::where('lead_id',$data->lead_id)->first();
+                    if($second==null){
+                        $input=self::handle_input_before_insert_to_oracle2($data);
+                        self::insert_to_oracle_and_run_proceduer2($input);
+                        printf("DATA INSERTED ,WHERE lead_id = ".$data->lead_id."\n");
+                    }else{
+                        printf("DATA IS FOUND ,WHERE lead_id = ".$data->lead_id."\n");
+                    }
+                }
+            });
+        leads_vu_kastle::whereNotNull('lead_id')
+            ->whereNotNull('acc_id')
+            ->whereDate('assignment_status_date', date("Y-m-d"))
+            ->orderBy('modified_date','desc')
+            ->chunk(100, function ($leads_vu_kastle_data)  use (&$i){
+                $ids = $leads_vu_kastle_data->pluck('lead_id')->toArray();
+                $second2=SIR_LEADS2_VU_KASTLE::wherein('lead_id',$ids)->count();
+                if(count($ids)!=$second2){
+                    foreach($leads_vu_kastle_data as $data){
+                        $second=SIR_LEADS2_VU_KASTLE::where('lead_id',$data->lead_id)->where('acc_id',$data->acc_id)->first();
+                        if($second==null){
+                            $input=self::handle_input_before_insert_to_oracle2($data);
+                            self::insert_to_oracle_and_run_proceduer2($input);
+                            printf("DATA INSERTED 2 ,WHERE lead_id = ".$data->lead_id."\n");
+                        }else{
+                            printf("DATA IS FOUND 2 ,WHERE lead_id = ".$data->lead_id."\n");
+                        }
+                    }
+                }else{
+                    printf("DATA IS FOUND 3\n");
+                }
+            });
+
     }
     public static function handle_data_and_insert_to_oracle(){
         $i =1 ;
@@ -66,6 +117,15 @@ class TransferDataServices{
     public static function insert_to_oracle_and_run_proceduer($input){
         try{
             leads_vu_kastle_oracel::insert($input);
+            // DB::connection('oracle')->statement("BEGIN proceduer_name(:proceduer_value); END;", ['proceduer_value' =>  $input['lead_id']]);
+        }catch (Throwable $e) {
+            printf($e->getMessage()."\n");
+            printf("ERROR WHEN INSERT lead_id= ".$input['LEAD_ID']."\n");
+        }
+    }
+    public static function insert_to_oracle_and_run_proceduer2($input){
+        try{
+            SIR_LEADS2_VU_KASTLE::insert($input);
             // DB::connection('oracle')->statement("BEGIN proceduer_name(:proceduer_value); END;", ['proceduer_value' =>  $input['lead_id']]);
         }catch (Throwable $e) {
             printf($e->getMessage()."\n");
@@ -300,6 +360,124 @@ class TransferDataServices{
                 'UTM_SOURCE'=>$data->utm_source,
                 'UTM_CAMPAIGN'=>$data->utm_campaign,
                 'KASTLE_USERID'=>$data->kastle_userid
+    ];
+        return $input;
+    }catch (Throwable $e) {
+        printf($e->getMessage()."\n");
+        printf("ERROR WHEN HANDLED INPUTS lead_id= ".$data->lead_id."\n");
+        return array();
+    }
+    }
+
+    public static function handle_input_before_insert_to_oracle2($data){
+        try{
+            $creation_date = Carbon::parse($data->creation_date);
+            $assignment_status_date=$data->assignment_status_date;
+            if ($assignment_status_date !=null){
+                $assignment_status_date=Carbon::parse($assignment_status_date);
+            }
+            $application_creation_date=$data->application_creation_date;
+            if ($application_creation_date !=null){
+                $application_creation_date=Carbon::parse($application_creation_date);
+            }
+            $rdob=$data->rdob;
+            if ($rdob !=null){
+                $rdob=Carbon::parse($rdob);
+            }
+            $modified_date=$data->modified_date;
+            if ($modified_date !=null){
+                $modified_date=Carbon::parse($modified_date);
+            }
+            $created_by=$data->created_by;
+            if ($created_by ==null){
+                $created_by=71;
+            }
+            $input=[
+                'LEAD_ID'=>$data->lead_id,
+                'FNAME'=>$data->fname,
+                'PHONE1'=>$data->phone1,
+                'CRMNATID'=>$data->crmnatid,
+                'CRMDOB'=>$data->crmdob,
+                'CITY_ID'=>$data->city_id,
+                'PROFESSION_ID'=>$data->profession_id,
+                'ACC_PROFESSION'=>$data->acc_profession,
+                'SALARYCAT_ID'=>$data->salarycat_id,
+                'ACC_SALARY_CAT'=>$data->acc_salary_cat,
+                'SALARYTYPE_ID'=>$data->salarytype_id,
+                'ACC_SALARY_TYPE'=>$data->acc_salary_type,
+                'SALARY'=>$data->salary,
+                'SALARYDEDUCTION'=>$data->salarydeduction,
+                'SALARY_BANK_ID'=>$data->salary_bank_id,
+                'ACC_BANK'=>$data->acc_bank,
+                'ACC_SOURCE'=>$data->acc_source,
+                'ACC_CHANNEL'=>$data->acc_channel,
+                'ACC_CREATED_BY'=>$data->acc_created_by,
+                'PRODUCT_TYPE_ID'=>$data->product_type_id,
+                'PRODUCT_TYPE'=>$data->product_type,
+                'PROSPECT_STATUS_ID'=>$data->prospect_status_id,
+                'PROSPECT_STATUS'=>$data->prospect_status,
+                'SOURCE_ID'=>$data->source_id,
+                'CHANNEL_ID'=>$data->channel_id,
+                'PREF_CALL_TIME'=>$data->pref_call_time,
+                'CREATED_BY'=>$created_by,
+                'CREATION_DATE'=>$creation_date,
+                'ASSIGN_BY'=>$data->assign_by,
+                'ASSIGNMENT_TO_ID'=>$data->assignment_to_id,
+                'ASSIGNMENT_NOTE'=>$data->assignment_note,
+                'ASSIGNMENT_STATUS_DATE'=>$assignment_status_date,
+                'MODIFIED_DATE'=>$modified_date,
+                'APP_ID'=>$data->app_id,
+                'FULL_NAME'=>$data->full_name,
+                'MOBILE'=>$data->mobile,
+                'NATID'=>$data->natid,
+                'NATID_EXPIRY_DATE'=>$data->natid_expiry_date,
+                'EMAIL_ADDRESS'=>$data->email_address,
+                'LEADCF69'=>$data->leadcf69,
+                'HOUSE_ALLOWANCE'=>$data->house_allowance,
+                'OTHER_ALLOWANCE'=>$data->other_allowance,
+                'SOCIAL_STATUS'=>$data->social_status,
+                'SOCIAL_STATUS_V'=>$data->social_status_v,
+                'SOCIAL_STATUS_KASTLE'=>$data->social_status_kastle,
+                'DOB'=>$data->dob,
+                'RDOB'=>$rdob,
+                'EMPLOYER_NAME'=>$data->employer_name,
+                'EMPLOYER_CITY'=>$data->employer_city,
+                'EMPLOYER_CITY_V'=>$data->employer_city_v,
+                'EMPLOYER_CITY_KASTLE'=>$data->employer_city_kastle,
+                'EMPLOYER_ADDRESS'=>$data->employer_address,
+                'OFFICE_PHONE'=>$data->office_phone,
+                'EMPLOYER_TYPE'=>$data->employer_type,
+                'EMPLOYER_TYPE_V'=>$data->employer_type_v,
+                'EMPLOYER_TYPE_KASTLE'=>$data->employer_type_kastle,
+                'EMPLOYMENT_TENNURE'=>$data->employment_tennure,
+                'EMPLOYMENT_TENNURE_Y'=>$data->employment_tennure_y,
+                'GROSS_SALARY'=>$data->gross_salary,
+                'DEDUCTION_VALUE'=>$data->deduction_value,
+                'APPLICATION_CREATION_DATE'=>$application_creation_date,
+                'HOUSE_EXPENSE'=>$data->house_expense,
+                'HOUSING_TYPE'=>$data->housing_type,
+                'HOUSING_TYPE_V'=>$data->housing_type_v,
+                'HOUSING_OWNERSHIP'=>$data->housing_ownership,
+                'HOUSING_OWNERSHIP_V'=>$data->housing_ownership_v,
+                'HOUSING_OWNERSHIP_KASTLE'=>$data->housing_ownership_kastle,
+                'MONTHLY_RENT'=>$data->monthly_rent,
+                'NO_OF_DEPENDENT'=>$data->no_of_dependent,
+                'NO_OF_DOMESTIC_WORKER'=>$data->no_of_domestic_worker,
+                'DOMESTIC_WORKER_SALARY'=>$data->domestic_worker_salary,
+                'INVOICES'=>$data->invoices,
+                'INSURANCE_VALUE'=>$data->insurance_value,
+                'NUMBER_OF_DEPENDENT_IN_PRIVATE_SCHOOL'=>$data->number_of_dependent_in_private_school,
+                'NUMBER_OF_DEPENDENT_IN_GOV_SCHOOL'=>$data->number_of_dependent_in_gov_school,
+                'MONTHLY_EDUCATION_EXPENSE'=>$data->monthly_education_expense,
+                'TRANSPORT_EXPENSES'=>$data->transport_expenses,
+                'HEALTH_SERVICE_EXPENSE'=>$data->health_service_expense,
+                'CALLING_EXPENSE'=>$data->calling_expense,
+                'FOOD_BEVERAGE_EXPENSE'=>$data->food_beverage_expense,
+                'DEPENDENT_EXPENSE'=>$data->dependent_expense,
+                'MONTHLY_AID_PARENTS'=>$data->monthly_aid_parents,
+                'OTHER_MONTHLY_EXPENSE'=>$data->other_monthly_expense,
+                'KASTLE_USERID'=>$data->kastle_userid,
+                'CRE_DATE'=>now(),
     ];
         return $input;
     }catch (Throwable $e) {

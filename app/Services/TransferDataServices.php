@@ -11,12 +11,13 @@ use Throwable;
 class TransferDataServices{
 
     public static function TransferDataFromMySqlToOracel (){
+        // self::handle_data_and_update_to_oracle_2();
         TransferDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database');
     }
     public static function TransferDataFromMySqlToOracel2 (){
         TransferDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database');
         self:: handle_data_and_insert_to_oracle_2();
-        self:: handle_data_and_insert_to_oracle();
+        // self:: handle_data_and_insert_to_oracle();
     }
 
     public static function handle_data_and_insert_to_oracle_2(){
@@ -380,7 +381,9 @@ class TransferDataServices{
             if ($application_creation_date !=null){
                 $application_creation_date=Carbon::parse($application_creation_date);
             }
+            $dob=$data->DOB;
             $rdob=$data->rdob;
+            $DOB_NEW=$rdob;
             if ($rdob !=null){
                 $rdob=Carbon::parse($rdob);
             }
@@ -438,7 +441,7 @@ class TransferDataServices{
                 'SOCIAL_STATUS'=>$data->social_status,
                 'SOCIAL_STATUS_V'=>$data->social_status_v,
                 'SOCIAL_STATUS_KASTLE'=>$data->social_status_kastle,
-                'DOB'=>$data->dob,
+                'DOB'=>$dob,
                 'RDOB'=>$rdob,
                 'EMPLOYER_NAME'=>$data->employer_name,
                 'EMPLOYER_CITY'=>$data->employer_city,
@@ -477,6 +480,7 @@ class TransferDataServices{
                 'MONTHLY_AID_PARENTS'=>$data->monthly_aid_parents,
                 'OTHER_MONTHLY_EXPENSE'=>$data->other_monthly_expense,
                 'KASTLE_USERID'=>$data->kastle_userid,
+                'DOB_NEW'=>$DOB_NEW,
                 'CRE_DATE'=>DB::connection('oracle')->raw('SYSDATE')
                 // 'CRE_DATE'=>now(),
     ];
@@ -486,5 +490,44 @@ class TransferDataServices{
         printf("ERROR WHEN HANDLED INPUTS lead_id= ".$data->lead_id."\n");
         return array();
     }
+    }
+
+    public static function handle_input_and_update_to_oracle2($data){
+        try{
+            $dob=$data->DOB;
+            $rdob=$data->rdob;
+            $data1=[
+                'LEAD_ID'=>$data->lead_id,
+                'DOB'=>$dob,
+                'DOB_NEW'=>$rdob,
+            ];
+            $query = "
+            UPDATE SIR_LEADS2_VU_KASTLE
+            SET DOB = :DOB,
+                DOB_NEW=:DOB_NEW
+            WHERE LEAD_ID = :LEAD_ID";
+        DB::connection('oracle')->statement($query, $data1);
+        DB::connection('oracle')->commit();
+        return $data;
+    }catch (Throwable $e) {
+        printf($e->getMessage()."\n");
+        printf("ERROR WHEN HANDLED INPUTS lead_id= ".$data->lead_id."\n");
+        return array();
+    }
+    }
+    public static function handle_data_and_update_to_oracle_2(){
+        $i=1;
+        leads_vu_kastle::whereNotNull('lead_id')
+            ->whereNotNull('acc_id')
+            ->orderBy('lead_id','asc')
+            ->chunk(3000, function ($leads_vu_kastle_data)  use (&$i){
+                foreach($leads_vu_kastle_data as $data){
+                    $second=SIR_LEADS2_VU_KASTLE::where('lead_id',$data->lead_id)->first();
+                    if($second!=null){
+                        self::handle_input_and_update_to_oracle2($data);
+                        printf("DATA UPDATED ,WHERE lead_id = ".$data->lead_id."\n");
+                    }
+                }
+            });
     }
 }

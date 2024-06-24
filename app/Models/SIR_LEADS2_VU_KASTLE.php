@@ -101,6 +101,7 @@ class SIR_LEADS2_VU_KASTLE extends Model
         'POSTING_DATE',
         'ERROR_MESSAGE',
         'CRE_DATE',
+        "DOB_NEW",
 
     ];
 }

@@ -12,6 +12,7 @@ class TransferYakeenDataServices{
     public static function TransferYakeenDataFromMySqlToOracel_ (){
         TransferYakeenDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database2');
     }
+
     public static function TransferYakeenDataFromMySqlToOracel2 (){
         TransferYakeenDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database2');
         self::handle_data_and_insert_to_oracle_yakeen();
@@ -24,28 +25,31 @@ class TransferYakeenDataServices{
         }else{
             $max=xx_nfh_yakeen_data_oracel::max('REC_ID');
         }
+        printf($max." max\n");
         xx_nfh_yakeen_data::whereNotNull('rec_id')
             ->where('rec_id', '>',$max)
             ->orderBy('rec_id','asc')
             ->chunk(100, function ($leads_vu_kastle_data)  use (&$i){
                 foreach($leads_vu_kastle_data as $data){
-                    $second=xx_nfh_yakeen_data_oracel::where('REC_ID',$data->lead_id)->first();
+
+                    $second=xx_nfh_yakeen_data_oracel::where('REC_ID',$data->rec_id)->first();
                     if($second==null){
                         $input=self::handle_input_before_insert_to_oracle($data);
                         self::insert_to_oracle($input);
-                        printf("DATA INSERTED ,WHERE lead_id = ".$data->rec_id. ' index : '. $i."\n");
+                        printf("DATA INSERTED ,WHERE rec_id = ".$data->rec_id. ' index : '. $i."\n");
                     }else{
-                        printf("DATA IS FOUND ,WHERE lead_id = ".$data->rec_id. ' index : '. $i."\n");
+                        printf("DATA IS FOUND ,WHERE rec_id = ".$data->rec_id. ' index : '. $i."\n");
                     }
                 }
-        });
+            });
     }
     public static function insert_to_oracle($input){
         try{
             xx_nfh_yakeen_data_oracel::insert($input);
+            self:: runProcedure($input['REC_ID']);
         }catch (Throwable $e) {
             printf($e->getMessage()."\n");
-            printf("ERROR WHEN INSERT rec_id= ".$input['rec_id']."\n");
+            printf("ERROR WHEN INSERT rec_id= ".$input['REC_ID']."\n");
         }
     }
     public static function handle_input_before_insert_to_oracle($data){
@@ -112,7 +116,8 @@ class TransferYakeenDataServices{
                 'SERVICE_DATA'=> $data->service_data,
                 'CREATED_BY'=> $data->created_by,
                 'CREATION_DATE'=> $creation_date,
-                'CRE_DATE'=>now()
+                'CRE_DATE'=>DB::connection('oracle')->raw('SYSDATE')
+                // 'CRE_DATE'=>now()
             ];
         return $input;
     }catch (Throwable $e) {
@@ -121,4 +126,45 @@ class TransferYakeenDataServices{
         return array();
     }
     }
+    public static function runProcedure($recId)
+    {
+        try {
+            $posted = '';
+            $postedDt = '';
+            $eMsg = '';
+            $pdo = DB::connection('oracle')->getPdo();
+            $stmt = $pdo->prepare('BEGIN SIR_YAKEEN_PRO(:rec_id, :posted, :posted_dt, :e_msg); END;');
+            $stmt->bindParam(':rec_id', $recId, \PDO::PARAM_INT);
+            $stmt->bindParam(':posted', $posted, \PDO::PARAM_STR | \PDO::PARAM_INPUT_OUTPUT, 1);
+            $stmt->bindParam(':posted_dt', $postedDt, \PDO::PARAM_STR | \PDO::PARAM_INPUT_OUTPUT, 19);
+            $stmt->bindParam(':e_msg', $eMsg, \PDO::PARAM_STR | \PDO::PARAM_INPUT_OUTPUT, 500);
+            $stmt->execute();
+            if ($postedDt) {
+                $postedDt = Carbon::parse($postedDt);
+            }
+            if ($eMsg==''){
+                $eMsg=null;
+            }
+            $data2=xx_nfh_yakeen_data_oracel::where('REC_ID',$recId)->first();
+            $data=[
+                'POSTED' => $posted,
+                'POSTING_DATE' => $postedDt,
+                'ERROR_MESSAGE' => $eMsg,
+                'REC_ID'=>$recId
+            ];
+            $query = "
+                UPDATE SIR_XX_NFH_YAKEEN_DATA
+                SET POSTED = :POSTED,
+                    POSTING_DATE = TO_DATE(:POSTING_DATE, 'YYYY-MM-DD HH24:MI:SS'),
+                    ERROR_MESSAGE = :ERROR_MESSAGE
+                WHERE REC_ID = :REC_ID";
+            DB::connection('oracle')->statement($query, $data);
+            DB::connection('oracle')->commit();
+            return true;
+        } catch (Exception $e) {
+            printf($e->getMessage());
+
+        }
+    }
+    
 }

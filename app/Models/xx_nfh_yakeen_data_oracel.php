@@ -73,7 +73,10 @@ class xx_nfh_yakeen_data_oracel extends Model
             'SERVICE_DATA',
             'CREATED_BY',
             'CREATION_DATE',
-            'CRE_DATE'
+            'CRE_DATE',
+            'POSTED',
+            'POSTING_DATE',
+            'ERROR_MESSAGE',
 
     ];
 }

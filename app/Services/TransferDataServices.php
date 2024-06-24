@@ -31,7 +31,7 @@ class TransferDataServices{
             ->whereNotNull('acc_id')
             ->where('lead_id', '>',$max)
             ->orderBy('lead_id','asc')
-            ->chunk(100, function ($leads_vu_kastle_data)  use (&$i){
+            ->chunk(3000, function ($leads_vu_kastle_data)  use (&$i){
                 foreach($leads_vu_kastle_data as $data){
                     $second=SIR_LEADS2_VU_KASTLE::where('lead_id',$data->lead_id)->first();
                     if($second==null){
@@ -52,7 +52,7 @@ class TransferDataServices{
                 $second2=SIR_LEADS2_VU_KASTLE::wherein('lead_id',$ids)->count();
                 if(count($ids)!=$second2){
                     foreach($leads_vu_kastle_data as $data){
-                        $second=SIR_LEADS2_VU_KASTLE::where('lead_id',$data->lead_id)->where('acc_id',$data->acc_id)->first();
+                        $second=SIR_LEADS2_VU_KASTLE::where('lead_id',$data->lead_id)->first();
                         if($second==null){
                             $input=self::handle_input_before_insert_to_oracle2($data);
                             self::insert_to_oracle_and_run_proceduer2($input);
@@ -79,7 +79,7 @@ class TransferDataServices{
             ->whereNotNull('acc_id')
             ->where('lead_id', '>',$max)
             ->orderBy('lead_id','asc')
-            ->chunk(100, function ($leads_vu_kastle_data)  use (&$i){
+            ->chunk(2000, function ($leads_vu_kastle_data)  use (&$i){
                 foreach($leads_vu_kastle_data as $data){
                     $second=leads_vu_kastle_oracel::where('lead_id',$data->lead_id)->where('acc_id',$data->acc_id)->first();
                     if($second==null){
@@ -477,7 +477,8 @@ class TransferDataServices{
                 'MONTHLY_AID_PARENTS'=>$data->monthly_aid_parents,
                 'OTHER_MONTHLY_EXPENSE'=>$data->other_monthly_expense,
                 'KASTLE_USERID'=>$data->kastle_userid,
-                'CRE_DATE'=>now(),
+                'CRE_DATE'=>DB::connection('oracle')->raw('SYSDATE')
+                // 'CRE_DATE'=>now(),
     ];
         return $input;
     }catch (Throwable $e) {

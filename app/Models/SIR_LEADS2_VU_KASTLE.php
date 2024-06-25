@@ -102,6 +102,10 @@ class SIR_LEADS2_VU_KASTLE extends Model
         'ERROR_MESSAGE',
         'CRE_DATE',
         "DOB_NEW",
+        'NATIONALITY',
+        'ACC_NATIONALITY',
+        'GENDER_ID',
+        'ACC_GENDER',
 
     ];
 }

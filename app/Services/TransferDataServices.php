@@ -360,7 +360,7 @@ class TransferDataServices{
                 'EDUCATION_LEVEL_KASTLE'=>$data->education_level_kastle,
                 'UTM_SOURCE'=>$data->utm_source,
                 'UTM_CAMPAIGN'=>$data->utm_campaign,
-                'KASTLE_USERID'=>$data->kastle_userid
+                'KASTLE_USERID'=>$data->kastle_userid,
     ];
         return $input;
     }catch (Throwable $e) {
@@ -395,6 +395,10 @@ class TransferDataServices{
             if ($created_by ==null){
                 $created_by=71;
             }
+            $NATIONALITY = ($data->nationality == '' || $data->nationality == null) ? null : $data->nationality;
+            $ACC_NATIONALITY = ($data->acc_nationality == '' || $data->acc_nationality == null) ? null : $data->acc_nationality;
+            $GENDER_ID = ($data->gender_id == '' || $data->gender_id == null) ? null : $data->gender_id;
+            $ACC_GENDER = ($data->acc_gender == '' || $data->acc_gender == null) ? null : $data->acc_gender;
             $input=[
                 'LEAD_ID'=>$data->lead_id,
                 'FNAME'=>$data->fname,
@@ -481,7 +485,11 @@ class TransferDataServices{
                 'OTHER_MONTHLY_EXPENSE'=>$data->other_monthly_expense,
                 'KASTLE_USERID'=>$data->kastle_userid,
                 'DOB_NEW'=>$DOB_NEW,
-                'CRE_DATE'=>DB::connection('oracle')->raw('SYSDATE')
+                'CRE_DATE'=>DB::connection('oracle')->raw('SYSDATE'),
+                'NATIONALITY'=>$NATIONALITY,
+                'ACC_NATIONALITY'=>$ACC_NATIONALITY,
+                'GENDER_ID'=>$GENDER_ID,
+                'ACC_GENDER'=>$ACC_GENDER
                 // 'CRE_DATE'=>now(),
     ];
         return $input;
@@ -494,21 +502,39 @@ class TransferDataServices{
 
     public static function handle_input_and_update_to_oracle2($data){
         try{
-            $dob=$data->DOB;
-            $rdob=$data->rdob;
+            // $dob=$data->DOB;
+            // $rdob=$data->rdob;
+            // // $data1=[
+            // //     'LEAD_ID'=>$data->lead_id,
+            // //     'DOB'=>$dob,
+            // //     'DOB_NEW'=>$rdob,
+            // // ];
+            // // $query = "
+            // // UPDATE SIR_LEADS2_VU_KASTLE
+            // // SET DOB = :DOB,
+            // //     DOB_NEW=:DOB_NEW
+            // // WHERE LEAD_ID = :LEAD_ID";
+            $NATIONALITY = ($data->nationality == '' || $data->nationality == null) ? null : $data->nationality;
+            $ACC_NATIONALITY = ($data->acc_nationality == '' || $data->acc_nationality == null) ? null : $data->acc_nationality;
+            $GENDER_ID = ($data->gender_id == '' || $data->gender_id == null) ? null : $data->gender_id;
+            $ACC_GENDER = ($data->acc_gender == '' || $data->acc_gender == null) ? null : $data->acc_gender;            
             $data1=[
                 'LEAD_ID'=>$data->lead_id,
-                'DOB'=>$dob,
-                'DOB_NEW'=>$rdob,
+                'NATIONALITY'=>$NATIONALITY,
+                'ACC_NATIONALITY'=>$ACC_NATIONALITY,
+                'GENDER_ID'=>$GENDER_ID,
+                'ACC_GENDER'=>$ACC_GENDER
             ];
             $query = "
-            UPDATE SIR_LEADS2_VU_KASTLE
-            SET DOB = :DOB,
-                DOB_NEW=:DOB_NEW
-            WHERE LEAD_ID = :LEAD_ID";
-        DB::connection('oracle')->statement($query, $data1);
-        DB::connection('oracle')->commit();
-        return $data;
+                    UPDATE SIR_LEADS2_VU_KASTLE
+                    SET NATIONALITY = :NATIONALITY,
+                        ACC_NATIONALITY=:ACC_NATIONALITY,
+                        GENDER_ID=:GENDER_ID,
+                        ACC_GENDER=:ACC_GENDER
+                    WHERE LEAD_ID = :LEAD_ID";
+            DB::connection('oracle')->statement($query, $data1);
+            DB::connection('oracle')->commit();
+            return $data;
     }catch (Throwable $e) {
         printf($e->getMessage()."\n");
         printf("ERROR WHEN HANDLED INPUTS lead_id= ".$data->lead_id."\n");

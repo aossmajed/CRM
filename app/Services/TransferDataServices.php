@@ -38,6 +38,7 @@ class TransferDataServices{
                     if($second==null){
                         $input=self::handle_input_before_insert_to_oracle2($data);
                         self::insert_to_oracle_and_run_proceduer2($input);
+                        // self::runProcedureCrm($input["LEAD_ID"]);
                         printf("DATA INSERTED ,WHERE lead_id = ".$data->lead_id."\n");
                     }else{
                         printf("DATA IS FOUND ,WHERE lead_id = ".$data->lead_id."\n");
@@ -57,6 +58,7 @@ class TransferDataServices{
                         if($second==null){
                             $input=self::handle_input_before_insert_to_oracle2($data);
                             self::insert_to_oracle_and_run_proceduer2($input);
+                            // self::runProcedureCrm($input["LEAD_ID"]);
                             printf("DATA INSERTED 2 ,WHERE lead_id = ".$data->lead_id."\n");
                         }else{
                             printf("DATA IS FOUND 2 ,WHERE lead_id = ".$data->lead_id."\n");
@@ -555,5 +557,52 @@ class TransferDataServices{
                     }
                 }
             });
+    }
+    public static function runProcedureCrm($lead_id)
+    {
+        try {
+            $posted = '';
+            $postedDt = '';
+            $eMsg = '';
+            $COMP_APPL_ID = '';
+            $pdo = DB::connection('oracle')->getPdo();
+            $stmt = $pdo->prepare('BEGIN PROCEDUER_NAME(:lead_id, :posted, :posted_dt, :e_msg, :COMP_APPL_ID); END;');
+            $stmt->bindParam(':lead_id', $lead_id, \PDO::PARAM_INT);
+            $stmt->bindParam(':posted', $posted, \PDO::PARAM_STR | \PDO::PARAM_INPUT_OUTPUT, 1);
+            $stmt->bindParam(':posted_dt', $postedDt, \PDO::PARAM_STR | \PDO::PARAM_INPUT_OUTPUT, 19);
+            $stmt->bindParam(':e_msg', $eMsg, \PDO::PARAM_STR | \PDO::PARAM_INPUT_OUTPUT, 500);
+            $stmt->bindParam(':COMP_APPL_ID', $COMP_APPL_ID, \PDO::PARAM_STR | \PDO::PARAM_INPUT_OUTPUT, 500);
+            $stmt->execute();
+            if ($postedDt) {
+                $postedDt = Carbon::parse($postedDt);
+            }
+            if ($eMsg==''){
+                $eMsg=null;
+            }
+            if ($COMP_APPL_ID==''){
+                $COMP_APPL_ID=null;
+            }
+            $data2=leads_vu_kastle::where('lead_id',$lead_id)->first();
+            $data=[
+                'POSTED' => $posted,
+                'POSTING_DATE' => $postedDt,
+                'ERROR_MESSAGE' => $eMsg,
+                'COMP_APPL_ID'=>$COMP_APPL_ID,
+                'LEAD_ID'=>$lead_id
+            ];
+            $query = "
+                UPDATE SIR_LEADS2_VU_KASTLE
+                SET POSTED = :POSTED,
+                    POSTING_DATE = TO_DATE(:POSTING_DATE, 'YYYY-MM-DD HH24:MI:SS'),
+                    ERROR_MESSAGE = :ERROR_MESSAGE,
+                    COMP_APPL_ID =:COMP_APPL_ID
+                WHERE LEAD_ID = :LEAD_ID";
+            DB::connection('oracle')->statement($query, $data);
+            DB::connection('oracle')->commit();
+            return true;
+        } catch (Exception $e) {
+            printf($e->getMessage());
+
+        }
     }
 }

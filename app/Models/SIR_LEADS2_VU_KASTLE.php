@@ -106,6 +106,7 @@ class SIR_LEADS2_VU_KASTLE extends Model
         'ACC_NATIONALITY',
         'GENDER_ID',
         'ACC_GENDER',
+        "COMP_APPL_ID",
 
     ];
 }

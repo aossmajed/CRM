@@ -38,7 +38,6 @@ class TransferDataServices{
                     if($second==null){
                         $input=self::handle_input_before_insert_to_oracle2($data);
                         self::insert_to_oracle_and_run_proceduer2($input);
-                        // self::runProcedureCrm($input["LEAD_ID"]);
                         printf("DATA INSERTED ,WHERE lead_id = ".$data->lead_id."\n");
                     }else{
                         printf("DATA IS FOUND ,WHERE lead_id = ".$data->lead_id."\n");
@@ -58,7 +57,6 @@ class TransferDataServices{
                         if($second==null){
                             $input=self::handle_input_before_insert_to_oracle2($data);
                             self::insert_to_oracle_and_run_proceduer2($input);
-                            // self::runProcedureCrm($input["LEAD_ID"]);
                             printf("DATA INSERTED 2 ,WHERE lead_id = ".$data->lead_id."\n");
                         }else{
                             printf("DATA IS FOUND 2 ,WHERE lead_id = ".$data->lead_id."\n");
@@ -129,7 +127,7 @@ class TransferDataServices{
     public static function insert_to_oracle_and_run_proceduer2($input){
         try{
             SIR_LEADS2_VU_KASTLE::insert($input);
-            // DB::connection('oracle')->statement("BEGIN proceduer_name(:proceduer_value); END;", ['proceduer_value' =>  $input['lead_id']]);
+            DB::connection('oracle')->statement("BEGIN SIR_PKG_WEB_APPLICATION.SIR_POPULATE_DATA(:LEAD_ID); END;", ['LEAD_ID' =>  $input['LEAD_ID']]);
         }catch (Throwable $e) {
             printf($e->getMessage()."\n");
             printf("ERROR WHEN INSERT lead_id= ".$input['LEAD_ID']."\n");

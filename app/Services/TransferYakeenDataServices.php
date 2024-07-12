@@ -154,7 +154,7 @@ class TransferYakeenDataServices{
                 'ERROR_MESSAGE' => $eMsg,
                 'REC_ID'=>$recId
             ];
-            print_r($data);
+            // print_r($data);
             $query = "
                 UPDATE SIR_XX_NFH_YAKEEN_DATA
                 SET POSTED = :POSTED,

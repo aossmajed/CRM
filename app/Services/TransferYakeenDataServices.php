@@ -130,8 +130,10 @@ class TransferYakeenDataServices{
     {
         try {
             $posted = '';
-            $postedDt = '';
+            // $postedDt = '';
+            $postedDt = null;
             $eMsg = '';
+            $recId=intval($recId);
             $pdo = DB::connection('oracle')->getPdo();
             $stmt = $pdo->prepare('BEGIN SIR_YAKEEN_PRO(:rec_id, :posted, :posted_dt, :e_msg); END;');
             $stmt->bindParam(':rec_id', $recId, \PDO::PARAM_INT);
@@ -152,6 +154,7 @@ class TransferYakeenDataServices{
                 'ERROR_MESSAGE' => $eMsg,
                 'REC_ID'=>$recId
             ];
+            print_r($data);
             $query = "
                 UPDATE SIR_XX_NFH_YAKEEN_DATA
                 SET POSTED = :POSTED,

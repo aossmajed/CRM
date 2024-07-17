@@ -11,20 +11,19 @@ use Throwable;
 class TransferDataServices{
 
     public static function TransferDataFromMySqlToOracel (){
-        // self::handle_data_and_update_to_oracle_2();
         TransferDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database');
     }
     public static function TransferDataFromMySqlToOracel2 (){
         TransferDataFromMYSQLtoORACEL::dispatch()->delay(now()->addMinutes(1))->onConnection('database');
         self:: handle_data_and_insert_to_oracle_2();
-        // self:: handle_data_and_insert_to_oracle();
     }
 
     public static function handle_data_and_insert_to_oracle_2(){
         $i =1 ;
         $count=SIR_LEADS2_VU_KASTLE::count();
         if ($count ==0){
-            $max=0;
+            // $max=0;
+            $max=200923;
         }else{
             $max=SIR_LEADS2_VU_KASTLE::max('LEAD_ID');
         }
@@ -127,7 +126,11 @@ class TransferDataServices{
     public static function insert_to_oracle_and_run_proceduer2($input){
         try{
             SIR_LEADS2_VU_KASTLE::insert($input);
-            DB::connection('oracle')->statement("BEGIN SIR_PKG_WEB_APPLICATION.SIR_POPULATE_DATA(:LEAD_ID); END;", ['LEAD_ID' =>  $input['LEAD_ID']]);
+            printf("proceduer ....\n");
+            // sleep(1);
+            $result=DB::connection('oracle')->statement("BEGIN SIR_PKG_WEB_APPLICATION.SIR_POPULATE_DATA(:LEAD_ID); END;", ['LEAD_ID' =>  $input['LEAD_ID']]);
+            printf("run proceduer : ".$result ." \n");
+            printf("run proceduer done for lead_id= ".$input['LEAD_ID']."\n");
         }catch (Throwable $e) {
             printf($e->getMessage()."\n");
             printf("ERROR WHEN INSERT lead_id= ".$input['LEAD_ID']."\n");
